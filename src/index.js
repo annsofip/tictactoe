@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
+import * as core from './core.js'
+import beholder from 'beholder-js';
 
 function Square({value, onClick}) {
     return (
@@ -13,129 +15,94 @@ function Square({value, onClick}) {
     );
 }
 
-class Board extends React.Component {
+function getSquare({index, state, eventHandler})
+{
+    const squares = core.getCurrentStepSquares(state);
+    return (
+        <Square
+            value={squares[index]}
+            onClick={() =>   eventHandler({name: "squareSelected", data: index})}
+        />
+    );
+}
 
-    renderSquare(i) {
-        return (
-            <Square
-                value={this.props.squares[i]}
-                onClick={() => this.props.onClick(i)}
-            />
-        );
-    }
-
-    render() {
-        return (
-            <div>
-                <div className="board-row">
-                    {this.renderSquare(0)}{this.renderSquare(1)}{this.renderSquare(2)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(3)}{this.renderSquare(4)}{this.renderSquare(5)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(6)}{this.renderSquare(7)}{this.renderSquare(8)}
-                </div>
+function Board({state, eventHandler}) {
+    return (
+        <div>
+            <div className="board-row">
+                {getSquare({index:0, state, eventHandler} )}
+                {getSquare({index:1, state, eventHandler} )}
+                {getSquare({index:2, state, eventHandler} )}
             </div>
-        );
-    }
-}
-
-class Game extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            history: [{
-                squares: Array(9).fill(null),
-            }],
-            stepNumber: 0,
-            xIsNext: true,
-        };
-    }
-    handleClick(i) {
-        const history = this.state.history.slice(0, this.state.stepNumber + 1);
-        const current = history[history.length - 1];
-        const squares = current.squares.slice();
-        if (calculateWinner(squares) || squares[i]) {
-            return;
-        }
-        squares[i] = this.state.xIsNext ? 'X' : 'O';
-        this.setState({
-            history: history.concat([{
-                squares: squares,
-            }]),
-            stepNumber: history.length,
-            xIsNext: !this.state.xIsNext,
-        });
-    }
-    jumpTo(step) {
-        this.setState({
-            stepNumber: step,
-            xIsNext: (step % 2) === 0,
-        });
-    }
-    render() {
-        const history = this.state.history;
-        const current = history[this.state.stepNumber];
-        const squares = current.squares.slice();
-
-        const winner = calculateWinner(squares);
-        const moves = history.map((step, move) => {
-            const desc = move ?
-                'Go to move #' + move :
-                'Go to game start';
-            return (
-                <li key={move}>
-                    <button onClick={() => this.jumpTo(move)}>{desc}</button>
-                </li>
-            );
-        });
-
-        let status;
-        if (winner) {
-            status = 'Winner: ' + winner;
-        } else {
-            status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-        }
-        return (
-            <div className="game">
-                <div className="game-board">
-                    <Board
-                        squares={current.squares}
-                        onClick={(i) => this.handleClick(i)}
-                    />
-                </div>
-                <div className="game-info">
-                    <div className="status">{status}</div>
-                    <ol>{moves}</ol>
-                </div>
+            <div className="board-row">
+                {getSquare({index:3, state, eventHandler} )}
+                {getSquare({index:4, state, eventHandler} )}
+                {getSquare({index:5, state, eventHandler} )}
             </div>
+            <div className="board-row">
+                {getSquare({index:6, state, eventHandler} )}
+                {getSquare({index:7, state, eventHandler} )}
+                {getSquare({index:8, state, eventHandler} )}
+            </div>
+        </div>
+    );
+}
+
+function Game({state, eventHandler}) {
+    console.log(state);
+    const winner = core.calculateWinner(state);
+    const moves = core.getHistory(state).map((step, move) => {
+        const desc = move ?
+            'Go to move #' + move :
+            'Go to game start';
+        return (
+            <li key={move}>
+                <button onClick={() => eventHandler({name: "goToMove", data: move})}>{desc}</button>
+            </li>
         );
+    });
+
+    let status;
+    if (winner) {
+        status = 'Winner: ' + winner;
+    } else {
+        status = 'Next player: ' + core.getNextPlayer(state);
     }
+    return (
+        <div className="game">
+            <div className="game-board">
+                <Board
+                    state={state}
+                    eventHandler={eventHandler}
+                    squares={core.getCurrentStepSquares(state)}
+                />
+            </div>
+            <div className="game-info">
+                <div className="status">{status}</div>
+                <ol>{moves}</ol>
+            </div>
+        </div>
+    );
 }
-function calculateWinner(squares) {
-    const lines = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
-    ];
-    for (let i = 0; i < lines.length; i++) {
-        const [a, b, c] = lines[i];
-        if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-            return squares[a];
-        }
-    }
-    return null;
-}
+
 
 // ========================================
+function render(state) {
+    ReactDOM.render(
+        <Game state={state} eventHandler={eventHandler}/>,
+        document.getElementById('root')
+    );
+}
 
-ReactDOM.render(
-    <Game/>,
-    document.getElementById('root')
-);
+function eventHandler(event) {
+    if (event.name === "squareSelected") {
+        model.swap(core.handleSquareSelected, event.data);
+
+    } else if (event.name === "goToMove") {
+        model.swap(core.jumpTo, event.data);
+    }
+}
+
+const model = beholder.mutableThing(core.createInitialState());
+model.addWatch('state-change', render);
+render(model.deref());
