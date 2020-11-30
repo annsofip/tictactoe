@@ -15,13 +15,12 @@ function Square({value, onClick}) {
     );
 }
 
-function getSquare({index, state, eventHandler})
-{
+function getSquare({index, state, eventHandler}) {
     const squares = core.getCurrentStepSquares(state);
     return (
         <Square
             value={squares[index]}
-            onClick={() =>   eventHandler({name: "squareSelected", data: index})}
+            onClick={() => eventHandler({name: "squareSelected", data: index})}
         />
     );
 }
@@ -30,19 +29,19 @@ function Board({state, eventHandler}) {
     return (
         <div>
             <div className="board-row">
-                {getSquare({index:0, state, eventHandler} )}
-                {getSquare({index:1, state, eventHandler} )}
-                {getSquare({index:2, state, eventHandler} )}
+                {getSquare({index: 0, state, eventHandler})}
+                {getSquare({index: 1, state, eventHandler})}
+                {getSquare({index: 2, state, eventHandler})}
             </div>
             <div className="board-row">
-                {getSquare({index:3, state, eventHandler} )}
-                {getSquare({index:4, state, eventHandler} )}
-                {getSquare({index:5, state, eventHandler} )}
+                {getSquare({index: 3, state, eventHandler})}
+                {getSquare({index: 4, state, eventHandler})}
+                {getSquare({index: 5, state, eventHandler})}
             </div>
             <div className="board-row">
-                {getSquare({index:6, state, eventHandler} )}
-                {getSquare({index:7, state, eventHandler} )}
-                {getSquare({index:8, state, eventHandler} )}
+                {getSquare({index: 6, state, eventHandler})}
+                {getSquare({index: 7, state, eventHandler})}
+                {getSquare({index: 8, state, eventHandler})}
             </div>
         </div>
     );
